@@ -1,7 +1,7 @@
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.Statement;
 
 public class App {
     public static void main(String[] args) {
@@ -11,21 +11,33 @@ public class App {
         String password = "yearup";
 
         try {
-            // 1. Create Connection
+            // Load driver (older style, but matches workbook)
+            Class.forName("com.mysql.cj.jdbc.Driver");
+
+            // 1. Open connection
             Connection conn = DriverManager.getConnection(url, user, password);
 
-            // 2. Create Statement
-            Statement stmt = conn.createStatement();
+            // 2. Create PreparedStatement with our query
+            String sql = "SELECT ProductID, ProductName, UnitPrice, UnitsInStock FROM Products";
+            PreparedStatement stmt = conn.prepareStatement(sql);
 
-            // 3. Execute Query
-            ResultSet rs = stmt.executeQuery("SELECT CompanyName FROM Customers");
+            // 3. Execute query
+            ResultSet rs = stmt.executeQuery();
 
-            // 4. Process Results
+            // 4. Print header
+            System.out.printf("%-5s %-35s %-10s %-10s%n", "Id", "Name", "Price", "Stock");
+            System.out.println("--------------------------------------------------------------");
+
+            // 5. Process each row
             while (rs.next()) {
-                System.out.println(rs.getString("CompanyName"));
+                int id = rs.getInt("ProductID");
+                String name = rs.getString("ProductName");
+                double price = rs.getDouble("UnitPrice");
+                int stock = rs.getInt("UnitsInStock");
+
+                System.out.printf("%-5d %-35s %-10.2f %-10d%n", id, name, price, stock);
             }
 
-            // 5. Close Resources
             rs.close();
             stmt.close();
             conn.close();
